@@ -8,19 +8,21 @@ from scipy.io import wavfile
 from analysis import note_to_harmonics
 from constants import INSTRUMENTS, CHUNK_SIZE, SILENT_CHUNK_THRESHOLD
 
-INSTRUMENTS_FILES = {instrument: [] for instrument in INSTRUMENTS}
+if __name__ == '__main__':
+    INSTRUMENTS_FILES = {instrument: [] for instrument in INSTRUMENTS}
 
-for instrument_id, instrument in enumerate(INSTRUMENTS):
-    for filename in os.listdir('samples/' + instrument + '/ordinario'):
-        # skip quiet samples
-        if '-pp-' in filename:
-            continue
-        try:
-            wavfile.read('samples/' + instrument + '/ordinario' + '/' + filename)
-            INSTRUMENTS_FILES[instrument].append('samples/' + instrument + '/ordinario' + '/' + filename)
-        except ValueError:
-            pass
+    for instrument_id, instrument in enumerate(INSTRUMENTS):
+        for filename in os.listdir('samples/' + instrument):
+            # skip quiet samples
+            if '-pp-' in filename:
+                continue
+            try:
+                wavfile.read('samples/' + instrument + '/' + filename)
+                INSTRUMENTS_FILES[instrument].append('samples/' + instrument + '/' + filename)
+            except ValueError:
+                pass
 
+SAMPLES = []
 
 def extract_data(data_filename, data_amounts, max_chunks_shift=0, data_type='sample'):
     just_amount = isinstance(data_amounts, int)
@@ -42,8 +44,11 @@ def extract_data(data_filename, data_amounts, max_chunks_shift=0, data_type='sam
         for instrument in instruments:
             samples.append(random.choice(INSTRUMENTS_FILES[instrument]))
         samples = [wavfile.read(sample) for sample in samples]
+        samples = [(sample[0], sample[1][11025:33075]) for sample in samples]
         longest_sample_len = max([len(sample[1]) for sample in samples])
+
         shifts = [0] + [random.randint(0, max_chunks_shift) for _ in range(instruments_amount - 1)]
+        SAMPLES.append([])
         for chunk_id in range(longest_sample_len // CHUNK_SIZE):
             result = [0] * len(INSTRUMENTS)
             chunk_sum = np.zeros(CHUNK_SIZE)
@@ -75,6 +80,7 @@ def extract_data(data_filename, data_amounts, max_chunks_shift=0, data_type='sam
                 data.append([result_data, result])
             else:
                 data[cnt].append([result_data, result])
+            SAMPLES[-1].append([result_data, result])
 
     # save data to file data.data
     with open(data_filename, 'w') as f:
@@ -90,8 +96,12 @@ def load_data(filename, train_test_ratio=0.8):
     print("Loading data from " + filename)
     data = []
 
+    lines_cnt = 0
     with open(filename, 'r') as f:
         for line in f:
+            lines_cnt += 1
+            if lines_cnt == 30000:
+                break
             features, answers = line.split('|')
 
             features = [float(x) for x in features.split()]
@@ -109,4 +119,4 @@ def load_data(filename, train_test_ratio=0.8):
 
 if __name__=="__main__":
     DATA_AMOUNTS = [0, 8000, 8000, 8000, 8000]
-    extract_data('samples.data', 30000, 0, 'sample')
+    extract_data('cropped_samples_fft.data', 50000, 0, 'fft')

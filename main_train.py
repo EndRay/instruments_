@@ -7,18 +7,20 @@ import joblib
 from sklearn.neural_network import MLPClassifier
 
 from constants import CHUNK_SIZE, INSTRUMENTS
-from data_extration import load_data
+from data_extration import load_data, SAMPLES, extract_data
+
 print(INSTRUMENTS)
 
-NEURAL_NETWORK_NAME = 'neural_network_multiple_shifts.pkl'
+NEURAL_NETWORK_NAME = 'ddd.pkl'
 DATA_NAME = 'shifted_multiple_balanced.data'
 # HIDDEN_LAYERS = (828,)
-# HIDDEN_LAYERS = (200, 200)
 HIDDEN_LAYERS = (200, 200)
 FEATURES = CHUNK_SIZE
 MAX_INSTRUMENTS = 10
 
-train_data, test_data = load_data("samples.data", 0)
+# extract_data('trash', 10000)
+
+train_data, test_data = load_data("cropped_samples_fft.data", 0.8)
 # test_data = [x for x in test_data if x[1][5] == 1]
 
 try:
@@ -26,23 +28,23 @@ try:
 except FileNotFoundError:
     clf = MLPClassifier(solver='adam', hidden_layer_sizes=HIDDEN_LAYERS, random_state=1, activation='relu', verbose=True, warm_start=True, max_iter=1)
 
-wf,data = wavfile.read("samples/Flute/ordinario/Fl-ord-B3-ff-N-N.wav")
-test_data = []
-for chunk_id in range(len(data) // CHUNK_SIZE):
-    chunk = data[chunk_id * CHUNK_SIZE: (chunk_id + 1) * CHUNK_SIZE]
-    chunk = chunk.astype(float)
-    chunk /= 32768
-    chunk /= 14
-    print(chunk)
-    print(clf.predict([chunk]))
-    test_data.append(chunk)
+# for i in range(len(SAMPLES)):
+#     sample = SAMPLES[i]
+#
+#     chunks = [sample[i][0] for i in range(len(sample))]
+#     instruments = [sample[i][1] for i in range(len(sample))]
+#
+#     print(str(clf.score(chunks, instruments) * 100) + '%')
+#
+# for i in range(len(INSTRUMENTS)):
+#     print(INSTRUMENTS[i] + ': ' + str(sum([x[1][i] for x in test_data])))
 
-ans = [0] * len(INSTRUMENTS)
-ans[5] = 1
-print("total: " + str(clf.score([x[0] for x in test_data], [x[1] for x in test_data]) * 100) + '%')
+# print("total: " + str(clf.score([x[0] for x in test_data], [x[1] for x in test_data]) * 100) + '%')
+# for i in range(len(INSTRUMENTS)):
+#     filtered_test_data = [x for x in test_data if x[1][i] == 1]
+#     print(INSTRUMENTS[i] + ': ' + str(clf.score([x[0] for x in filtered_test_data], [x[1] for x in filtered_test_data]) * 100) + '%')
 
-
-while False:
+while True:
     clf.fit([x[0] for x in train_data], [x[1] for x in train_data])
     joblib.dump(clf, NEURAL_NETWORK_NAME)
     #score on data with different amount of instruments
