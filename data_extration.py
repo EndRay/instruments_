@@ -23,13 +23,20 @@ for instrument_id, instrument in enumerate(INSTRUMENTS):
 
 
 def extract_data(data_filename, data_amounts, max_chunks_shift=0, data_type='sample'):
-    max_instruments = len(data_amounts) - 1
-    data = [[] for _ in range(max_instruments + 1)]
+    just_amount = isinstance(data_amounts, int)
 
-    while any(len(data[i]) < data_amounts[i] for i in range(len(data))):
+    if not just_amount:
+        max_instruments = len(data_amounts) - 1
+        data = [[] for _ in range(max_instruments + 1)]
+    else:
+        max_instruments = len(INSTRUMENTS)
+        data = []
+
+
+    while not just_amount and any(len(data[i]) < data_amounts[i] for i in range(len(data))) or just_amount and len(data) < data_amounts:
         print('+'.join(map(str, [len(data[i]) for i in range(len(data))])))
-        # instruments_amount = random.randint(1, MAX_INSTRUMENTS)
-        instruments_amount = 14
+        instruments_amount = random.randint(1, len(INSTRUMENTS))
+        # instruments_amount = 14
         instruments = random.sample(INSTRUMENTS, instruments_amount)
         samples = []
         for instrument in instruments:
@@ -49,7 +56,7 @@ def extract_data(data_filename, data_amounts, max_chunks_shift=0, data_type='sam
                     result[INSTRUMENTS.index(instrument)] = 1
                 chunk_sum += chunk
             cnt = sum(result)
-            if cnt > max_instruments or len(data[cnt]) >= data_amounts[cnt]:
+            if not just_amount and (cnt > max_instruments or len(data[cnt]) >= data_amounts[cnt]) or just_amount and len(data) >= data_amounts:
                 continue
             chunk_sum /= max_instruments
             chunk_sum /= 32768
@@ -64,15 +71,19 @@ def extract_data(data_filename, data_amounts, max_chunks_shift=0, data_type='sam
                 case _:
                     raise ValueError('Unknown data type')
 
-            data[cnt].append([result_data, result])
-
-    print('Data size: ' + str(sum(len(data[i]) for i in range(max_instruments + 1))))
+            if just_amount:
+                data.append([result_data, result])
+            else:
+                data[cnt].append([result_data, result])
 
     # save data to file data.data
     with open(data_filename, 'w') as f:
         for cnt in range(len(data)):
-            for i in range(len(data[cnt])):
-                f.write(" ".join(map(str, data[cnt][i][0])) + "|" + " ".join(map(str, data[cnt][i][1])) + '\n')
+            if just_amount:
+                f.write(" ".join(map(str, data[cnt][0])) + "|" + " ".join(map(str, data[cnt][1])) + '\n')
+            else:
+                for i in range(len(data[cnt])):
+                    f.write(" ".join(map(str, data[cnt][i][0])) + "|" + " ".join(map(str, data[cnt][i][1])) + '\n')
 
 
 def load_data(filename, train_test_ratio=0.8):
