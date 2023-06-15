@@ -87,16 +87,12 @@ def extract_data(data_filename, data_amounts, max_chunks_shift=0, data_type='sam
 
 
 def load_data(filename, train_test_ratio=0.8):
+    print("Loading data from " + filename)
     data = [[] for _ in range(len(INSTRUMENTS) + 1)]
 
     with open(filename, 'r') as f:
         for line in f:
             features, answers = line.split('|')
-            print(line)
-            print(line.split('|'))
-            print(line.count('|'))
-            print(features)
-            print(answers)
 
             features = [float(x) for x in features.split()]
             answers = [int(x) for x in answers.split()]
@@ -113,6 +109,8 @@ def load_data(filename, train_test_ratio=0.8):
 
     train_data = [x for y in train_data for x in y]
     test_data = [x for y in test_data for x in y]
+    print("Train data size: " + str(len(train_data)))
+    print("Test data size: " + str(len(test_data)))
 
     random.shuffle(train_data)
     random.shuffle(test_data)
