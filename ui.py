@@ -20,8 +20,16 @@ error_label = tk.Label(window, textvariable=error_text, bg='white', font=('Arial
 error_label.place(x=0, y=280, anchor='sw')
 error_label.pack()
 
+# place them horizontally
+instruments_labels = \
+    [tk.Label(window, text=instrument, bg='white', font=('Arial', 10), width=20, height=2, fg='red') for
+     instrument in INSTRUMENTS]
+
+for i in range(len(instruments_labels)):
+    instruments_labels[i].pack()
+
 MODEL = joblib.load('ddd.pkl')
-DECISION_WINDOW = 15
+DECISION_WINDOW = 30
 
 print(MODEL)
 
@@ -36,6 +44,8 @@ def choose_file():
         return
     error_text.set('')
     fs, data = wavfile.read(filename)
+    if len(data.shape) > 1:
+        data = data[:, 0] + data[:, 1]
     answers = []
     for chunk_id in range(len(data) // CHUNK_SIZE):
         chunk = data[chunk_id * CHUNK_SIZE:(chunk_id + 1) * CHUNK_SIZE]
@@ -62,13 +72,27 @@ def choose_file():
     for i in range(len(answers)):
         instruments = []
         decision_sum += answers[i]
+        results.append([0] * len(INSTRUMENTS))
         if i >= DECISION_WINDOW:
             decision_sum -= answers[i - DECISION_WINDOW]
         for i in range(len(INSTRUMENTS)):
             if decision_sum[i] >= DECISION_WINDOW / 2:
-                instruments.append(INSTRUMENTS[i])
-        results.append(" ".join(instruments))
-        print(results[-1])
+                results[-1][i] = 1
+
+    results = results[DECISION_WINDOW // 2:]
+
+    i = 0
+    while i < len(results):
+        while sd.get_stream().time - begin < i * CHUNK_SIZE / fs:
+            pass
+        for instrument_id in range(len(INSTRUMENTS)):
+            if results[i][instrument_id]:
+                instruments_labels[instrument_id].config(fg='green')
+            else:
+                instruments_labels[instrument_id].config(fg='red')
+        for instrument_id in range(len(INSTRUMENTS)):
+            instruments_labels[instrument_id].update()
+        i += 1
 
 
 choose_file_button = tk.Button(window, text='Choose file', width=15, height=2, command=choose_file)
