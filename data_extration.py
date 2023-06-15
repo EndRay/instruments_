@@ -11,13 +11,13 @@ from constants import INSTRUMENTS, CHUNK_SIZE, SILENT_CHUNK_THRESHOLD
 INSTRUMENTS_FILES = {instrument: [] for instrument in INSTRUMENTS}
 
 for instrument_id, instrument in enumerate(INSTRUMENTS):
-    for filename in os.listdir('samples/' + instrument):
+    for filename in os.listdir('samples/' + instrument + '/ordinario'):
         # skip quiet samples
         if '-pp-' in filename:
             continue
         try:
-            wavfile.read('samples/' + instrument + '/' + filename)
-            INSTRUMENTS_FILES[instrument].append('samples/' + instrument + '/' + filename)
+            wavfile.read('samples/' + instrument + '/ordinario' + '/' + filename)
+            INSTRUMENTS_FILES[instrument].append('samples/' + instrument + '/ordinario' + '/' + filename)
         except ValueError:
             pass
 
@@ -34,8 +34,8 @@ def extract_data(data_filename, data_amounts, max_chunks_shift=0, data_type='sam
 
 
     while not just_amount and any(len(data[i]) < data_amounts[i] for i in range(len(data))) or just_amount and len(data) < data_amounts:
-        print('+'.join(map(str, [len(data[i]) for i in range(len(data))])))
-        instruments_amount = random.randint(1, len(INSTRUMENTS))
+        #('+'.join(map(str, [len(data[i]) for i in range(len(data))])))
+        instruments_amount = random.randint(1, 3)
         # instruments_amount = 14
         instruments = random.sample(INSTRUMENTS, instruments_amount)
         samples = []
@@ -88,7 +88,7 @@ def extract_data(data_filename, data_amounts, max_chunks_shift=0, data_type='sam
 
 def load_data(filename, train_test_ratio=0.8):
     print("Loading data from " + filename)
-    data = [[] for _ in range(len(INSTRUMENTS) + 1)]
+    data = []
 
     with open(filename, 'r') as f:
         for line in f:
@@ -98,21 +98,15 @@ def load_data(filename, train_test_ratio=0.8):
             answers = [int(x) for x in answers.split()]
             data_line = [features, answers]
             cnt = sum(data_line[1])
-            data[cnt].append(data_line)
+            data.append(data_line)
 
-    train_data = [[] for _ in range(len(INSTRUMENTS) + 1)]
-    test_data = [[] for _ in range(len(INSTRUMENTS) + 1)]
-
-    for i in range(len(INSTRUMENTS) + 1):
-        train_data[i] = data[i][:int(len(data[i]) * train_test_ratio)]
-        test_data[i] = data[i][int(len(data[i]) * train_test_ratio):]
-
-    train_data = [x for y in train_data for x in y]
-    test_data = [x for y in test_data for x in y]
-    print("Train data size: " + str(len(train_data)))
-    print("Test data size: " + str(len(test_data)))
-
-    random.shuffle(train_data)
-    random.shuffle(test_data)
+    random.shuffle(data)
+    train_data = data[:int(train_test_ratio*len(data))]
+    test_data = data[int(train_test_ratio*len(data)):]
 
     return train_data, test_data
+
+
+if __name__=="__main__":
+    DATA_AMOUNTS = [0, 8000, 8000, 8000, 8000]
+    extract_data('samples.data', 30000, 0, 'sample')
