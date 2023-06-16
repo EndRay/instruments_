@@ -92,7 +92,7 @@ def extract_data(data_filename, data_amounts, max_chunks_shift=0, data_type='sam
                     f.write(" ".join(map(str, data[cnt][i][0])) + "|" + " ".join(map(str, data[cnt][i][1])) + '\n')
 
 
-def load_data(filename, train_test_ratio=0.8):
+def load_data(filename, amount_of_data, train_test_ratio=0.8):
     print("Loading data from " + filename)
     data = []
 
@@ -100,7 +100,7 @@ def load_data(filename, train_test_ratio=0.8):
     with open(filename, 'r') as f:
         for line in f:
             lines_cnt += 1
-            if lines_cnt == 30000:
+            if lines_cnt == amount_of_data:
                 break
             features, answers = line.split('|')
 
