@@ -36,3 +36,4 @@ Best accuracy for 1-4 notes/instruments: 88%
 - Time to train
 - Hidden layers size
 - Data percentage to accuracy
+- Accuracy on different instruments
