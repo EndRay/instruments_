@@ -28,7 +28,7 @@ instruments_labels = \
 for i in range(len(instruments_labels)):
     instruments_labels[i].pack()
 
-MODEL = joblib.load('ddd.pkl')
+MODEL = joblib.load('trained_models/cropped_fft_828.pkl')
 DECISION_WINDOW = 30
 
 print(MODEL)

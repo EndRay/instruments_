@@ -2,7 +2,7 @@ from data_extration import load_data
 from train import *
 from matplotlib import pyplot as plt
 
-train_data, test_data = load_data("samples.data", 0.8)
+train_data, test_data = load_data("data/samples.data", 0.8)
 result = train(train_data, test_data, solver='adam', hidden_layer_sizes=[40, 40], activation='relu', loss_curve_iterations=10, data_percentage_accuracy=True)
 #draw plots using result['loss_curve'] and result['data_percentage_accuracy']
 plt.plot(result['loss_curve'])
